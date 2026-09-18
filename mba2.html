@@ -153,6 +153,9 @@ html{-webkit-text-size-adjust:100%}
 .ev-hol{background:#ffe4e6;color:var(--hol)}
 .ev-act{background:#fef3c7;color:var(--ev)}
 .ev-adj{background:#dbeafe;color:var(--adj)}
+.gcell.hol::after{content:"假期 · 无课";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--ink2);letter-spacing:1px}
+.gcell.adj0::after{content:"调休日 · 本班无课";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--adj);letter-spacing:1px}
+.gcell.mk::before{content:"补";position:absolute;top:4px;right:6px;z-index:2;font-size:10px;font-weight:700;color:var(--adj);opacity:.9}
 .gslot{
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
   background:var(--hd);border-radius:10px;padding:6px 2px;font-size:12.5px;font-weight:800;color:#fff;
@@ -376,8 +379,8 @@ html{-webkit-text-size-adjust:100%}
       <div id="callist"></div>
       <div class="calnote">
         📌 <b>学期安排：</b>2026秋季学期共 <b>19 周</b>，自 <b>2026年9月7日（周一）</b> 起至 <b>2027年1月15日（周五）</b> 止。<br>
-        🏖️ <b>放假安排：</b>中秋节 9月25日（周五）放假；国庆节 10月1日—10月7日 放假；元旦节 2027年1月1日（周五）放假。<br>
-        🔄 <b>调休日：</b>9月20日（周日）、10月10日（周六）为调休日，可能上课，具体以学校通知为准。<br>
+        🏖️ <b>放假安排：</b>中秋节 9月25日—27日（周五至周日）放假，共3天；国庆节 10月1日—7日（周四至周三）放假调休，共7天；元旦节 2027年1月1日（周五）放假。<br>
+        🔄 <b>调休补课：</b>9月20日（周日）补10月6日（周二）的课；10月10日（周六）补10月7日（周三）的课。（依据学校《关于2026年中秋节、国庆节放假的通知》）<br>
         ❄️ <b>寒假：</b>2027年1月16日 — 2月25日；下学期 2月26日报到注册，<b>3月1日正式上课</b>。
       </div>
     </div>
@@ -418,8 +421,10 @@ const ROOM = '7311 / 7313';
 
 /* 节假日 / 校历事件（key = YYYY-M-D）  type: festival=放假 activity=校活动 adjust=调休日 */
 const EVENTS = {
-  '2026-9-20' :{label:'调休日（可能上课）', short:'调休', type:'adjust'},
+  '2026-9-20' :{label:'调休上课 · 补10月6日（周二）的课', short:'补周二课', type:'adjust', repl:'2026-10-6'},
   '2026-9-25' :{label:'中秋节放假', short:'中秋', type:'festival'},
+  '2026-9-26' :{label:'中秋节放假', short:'中秋', type:'festival'},
+  '2026-9-27' :{label:'中秋节放假', short:'中秋', type:'festival'},
   '2026-10-1' :{label:'国庆节放假', short:'国庆', type:'festival'},
   '2026-10-2' :{label:'国庆节放假', short:'国庆', type:'festival'},
   '2026-10-3' :{label:'国庆节放假', short:'国庆', type:'festival'},
@@ -427,7 +432,7 @@ const EVENTS = {
   '2026-10-5' :{label:'国庆节放假', short:'国庆', type:'festival'},
   '2026-10-6' :{label:'国庆节放假', short:'国庆', type:'festival'},
   '2026-10-7' :{label:'国庆节放假', short:'国庆', type:'festival'},
-  '2026-10-10':{label:'调休日（可能上课）', short:'调休', type:'adjust'},
+  '2026-10-10':{label:'调休上课 · 补10月7日（周三）的课', short:'补周三课', type:'adjust', repl:'2026-10-7'},
   '2026-10-29':{label:'校运会', short:'运动会', type:'activity'},
   '2026-10-30':{label:'校运会', short:'运动会', type:'activity'},
   '2026-11-11':{label:'校庆日', short:'校庆', type:'activity'},
@@ -522,6 +527,21 @@ function sessionsInWeek(w){
   return out;
 }
 function eventOf(d){ return EVENTS[dkey(d)] || null; }
+function parseKey(k){ const p=k.split('-').map(Number); return new Date(p[0],p[1]-1,p[2]); }
+function effDow(d){        /* 某日实际执行课表的星期几：调休补课日按被补日 */
+  const e = eventOf(d);
+  if (e && e.type==='adjust' && e.repl){ const r=parseKey(e.repl); return r.getDay()===0?7:r.getDay(); }
+  return d.getDay()===0?7:d.getDay();
+}
+function effWeek(d){       /* 调休补课日按被补日所在周 */
+  const e = eventOf(d);
+  if (e && e.type==='adjust' && e.repl) return weekOf(parseKey(e.repl));
+  return weekOf(d);
+}
+function sessionsFor(d){   /* 某日实际要上的课（含调休补课口径） */
+  return sessionsInWeek(effWeek(d)).filter(x=>x.s.dow===effDow(d))
+    .sort((a,b)=>SLOTS[a.s.slot].ord - SLOTS[b.s.slot].ord);
+}
 function weekEvents(w){
   const seen = {}, ev = [];
   weekDates(w).forEach(d=>{
@@ -531,7 +551,7 @@ function weekEvents(w){
   return ev;
 }
 const evChipCls = e => e.type==='festival' ? 'ev-hol' : (e.type==='adjust' ? 'ev-adj' : 'ev-act');
-const evShort  = e => e.label.replace('（可能上课）','').replace('放假','');   // 校历行短标签
+const evShort  = e => e.short || e.label.replace('（可能上课）','').replace('放假','');   // 校历行短标签
 const wkLabel = s => s.ws===s.we ? '第'+s.ws+'周' : '第'+s.ws+'–'+s.we+'周';
 
 function semesterState(now){
@@ -577,25 +597,27 @@ function getNextClass(){
     if (!w) { if (d > SEM_END) break; continue; }
     const e = eventOf(d);
     if (e && e.type==='festival') continue;      // 放假日不计算课程
-    const dow = d.getDay()===0?7:d.getDay();
+    const dow = effDow(d), wk = effWeek(d);      // 调休补课日按被补日的周次与星期
     const list = [];
     COURSES.forEach(c=>c.sessions.forEach(s=>{
-      if (s.dow===dow && w>=s.ws && w<=s.we) list.push({c,s});
+      if (s.skip && s.skip.includes(wk)) return;
+      if (s.dow===dow && wk>=s.ws && wk<=s.we) list.push({c,s});
     }));
     if (!list.length) continue;
     list.sort((a,b)=>SLOTS[a.s.slot].ord - SLOTS[b.s.slot].ord);
     for (const it of list){
       const [h,m] = SLOT_END[it.s.slot];
       const end = new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, m);
-      if (end > NOW) return {...it, d, w};
+      if (end > NOW) return {...it, d, w, adj: !!(e && e.type==='adjust')};
     }
   }
   return null;
 }
 function todaySessions(){
   if (!CUR_WEEK) return [];
-  const dow = NOW.getDay()===0?7:NOW.getDay();
-  return sessionsInWeek(CUR_WEEK).filter(x=>x.s.dow===dow)
+  const ev = eventOf(NOW);
+  if (ev && ev.type==='festival') return [];     // 放假当日无课
+  return sessionsInWeek(effWeek(NOW)).filter(x=>x.s.dow===effDow(NOW))
     .sort((a,b)=>SLOTS[a.s.slot].ord - SLOTS[b.s.slot].ord);
 }
 
@@ -612,14 +634,16 @@ function renderHero(){
   const next = getNextClass();
   if (next){
     stats.push({lbl:'下一节课', val:next.c.short+' · '+md(next.d),
-                sub:DOW[next.s.dow]+' · '+SLOTS[next.s.slot].label+' '+SLOTS[next.s.slot].time});
+                sub:(next.adj ? '按'+DOW[next.s.dow]+'课表' : DOW[next.s.dow])+' · '+SLOTS[next.s.slot].label+' '+SLOTS[next.s.slot].time});
   }
 
   const tlist = todaySessions();
-  const dowTxt = '周'+['','一','二','三','四','五','六','日'][NOW.getDay()===0?7:NOW.getDay()];
+  const evNow = eventOf(NOW);
+  let dowTxt = '周'+['','一','二','三','四','五','六','日'][NOW.getDay()===0?7:NOW.getDay()];
+  if (evNow && evNow.type==='adjust') dowTxt += ' · '+evNow.short;
   let tInner;
   if (!tlist.length){
-    tInner = '<div class="tnone">今天没有课 🎉</div>';
+    tInner = '<div class="tnone">'+(evNow && evNow.type==='festival' ? '节假日放假，今日无课' : '今天没有课 🎉')+'</div>';
   } else {
     tInner = '<div class="tlist">' + tlist.map(({c,s})=>
       '<div class="trow"><span class="cdt '+c.cls+'"></span><span class="tn">'+c.short+'</span>'
@@ -701,11 +725,15 @@ function renderGrid(){
     const sl = SLOTS[k];
     g += '<div class="gslot"><span class="vl">'+sl.label+'</span><span class="pt">'+sl.per+'</span><span class="pt">'+sl.time+'</span></div>';
     for (let dow=1; dow<=7; dow++){
-      const list = sessionsInWeek(viewWeek).filter(x=>x.s.dow===dow && x.s.slot===k);
+      const d = ds[dow-1];
+      const evd = eventOf(d);
+      const off = !!(evd && evd.type==='festival');   // 放假当日不显示课程块
+      const adj = !!(evd && evd.type==='adjust');     // 调休补课日：按被补日课表展示
+      const list = off ? [] : sessionsFor(d).filter(x=>x.s.slot===k);
       if (!list.length){
-        g += '<div class="gcell'+(dow>=6?' we':'')+'"></div>';
+        g += '<div class="gcell'+(off?' hol':(adj?' adj0':(dow>=6?' we':'')))+'"></div>';
       } else {
-        g += '<div class="gcell">';
+        g += '<div class="gcell'+(adj?' mk':'')+'">';
         list.forEach(({c},idx)=>{
           g += '<button class="ccard '+c.cls+'" style="animation-delay:'+(idx*0.05)+'s" data-c="'+c.id+'">'
             + '<span class="nm">'+c.short+'</span>'
