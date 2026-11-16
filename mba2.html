@@ -153,6 +153,7 @@ html{-webkit-text-size-adjust:100%}
 .ev-hol{background:#ffe4e6;color:var(--hol)}
 .ev-act{background:#fef3c7;color:var(--ev)}
 .ev-adj{background:#dbeafe;color:var(--adj)}
+.ev-exam{background:#ffe4e6;color:var(--hol)}
 .gcell.hol::after{content:"假期 · 无课";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--ink2);letter-spacing:1px}
 .gcell.adj0::after{content:"调休日 · 本班无课";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--adj);letter-spacing:1px}
 .gcell.mk::before{content:"补";position:absolute;top:4px;right:6px;z-index:2;font-size:10px;font-weight:700;color:var(--adj);opacity:.9}
@@ -171,6 +172,15 @@ html{-webkit-text-size-adjust:100%}
 .ccard:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(30,41,59,.16)}
 .ccard .nm{font-size:13px;font-weight:800;line-height:1.3}
 .ccard .tc{font-size:11.5px;opacity:.85}
+/* 考试卡片 */
+.ecard{
+  height:100%;width:100%;border:1.5px dashed var(--hol);border-radius:10px;padding:8px;
+  display:flex;flex-direction:column;gap:3px;background:#fff1f2;color:var(--hol);
+}
+.ecard .bdg{align-self:flex-start;font-size:10px;font-weight:800;background:var(--hol);color:#fff;border-radius:99px;padding:1px 7px;letter-spacing:1px}
+.ecard .nm{font-size:13px;font-weight:800;line-height:1.3}
+.ecard .et{font-size:11.5px;font-weight:700}
+.ecard .er{font-size:11px;opacity:.9}
 /* 13 门课程浅色系 */
 .c1{background:#ffe4e6;color:#9f1239}.c2{background:#ffedd5;color:#9a3412}.c3{background:#fef3c7;color:#92400e}
 .c4{background:#dcfce7;color:#166534}.c5{background:#ccfbf1;color:#115e59}.c6{background:#e0f2fe;color:#075985}
@@ -303,6 +313,12 @@ html{-webkit-text-size-adjust:100%}
   .ccard{padding:5px 3px 5px 5px;gap:2px;border-radius:7px}
   .ccard .nm{font-size:11.5px;line-height:1.3}
   .ccard .tc{font-size:10px}
+  .ecard{padding:5px 3px 5px 5px;gap:2px;border-radius:7px}
+  .ecard .bdg{font-size:9px;padding:0 5px}
+  .ecard .nm{font-size:11.5px;line-height:1.3}
+  .ecard .et{font-size:9.5px}
+  .ecard .er{font-size:9.5px}
+  .ecard .er .cw{display:none}
   .gridcard{padding:8px}
   .calrow .wev{flex-basis:100%;justify-content:flex-start}
   .klist{grid-template-columns:1fr}
@@ -381,6 +397,7 @@ html{-webkit-text-size-adjust:100%}
         📌 <b>学期安排：</b>2026秋季学期共 <b>19 周</b>，自 <b>2026年9月7日（周一）</b> 起至 <b>2027年1月15日（周五）</b> 止。<br>
         🏖️ <b>放假安排：</b>中秋节 9月25日—27日（周五至周日）放假，共3天；国庆节 10月1日—7日（周四至周三）放假调休，共7天；元旦节 2027年1月1日（周五）放假。<br>
         🔄 <b>调休补课：</b>9月20日（周日）补10月6日（周二）的课；10月10日（周六）补10月7日（周三）的课。（依据学校《关于2026年中秋节、国庆节放假的通知》）<br>
+        📝 <b>期末考试：</b>11月18日（周三）15:00–17:00《组织行为学》· 11月19日（周四）9:00–11:00《商务英语》· 11月20日（周五）9:00–11:00《管理信息系统》，均在 <b>7311 教室</b>。（依据班级群公告）<br>
         ❄️ <b>寒假：</b>2027年1月16日 — 2月25日；下学期 2月26日报到注册，<b>3月1日正式上课</b>。
       </div>
     </div>
@@ -401,7 +418,7 @@ html{-webkit-text-size-adjust:100%}
 <button class="fab" id="fab">回到本周</button>
 
 <footer class="foot">
-  <b>数据来源：</b>《2026年秋季MBA-2班课程安排及参考教材》《2026秋季学期校历及两校区上课时间》<br>
+  <b>数据来源：</b>《2026年秋季MBA-2班课程安排及参考教材》《2026秋季学期校历及两校区上课时间》《MBA2班期末考试安排（班级群公告）》<br>
   教材与教师联系方式请点击对应课程卡片查看 · 放假与调课安排以学校通知为准 · 页面自动识别当前周次
 </footer>
 
@@ -433,11 +450,21 @@ const EVENTS = {
   '2026-10-6' :{label:'国庆节放假', short:'国庆', type:'festival'},
   '2026-10-7' :{label:'国庆节放假', short:'国庆', type:'festival'},
   '2026-10-10':{label:'调休上课 · 补10月7日（周三）的课', short:'补周三课', type:'adjust', repl:'2026-10-7'},
+  '2026-11-18':{label:'期末考试 · 组织行为学 15:00–17:00 · 7311教室', short:'考试', type:'exam'},
+  '2026-11-19':{label:'期末考试 · 商务英语 9:00–11:00 · 7311教室', short:'考试', type:'exam'},
+  '2026-11-20':{label:'期末考试 · 管理信息系统 9:00–11:00 · 7311教室', short:'考试', type:'exam'},
   '2026-10-29':{label:'校运会', short:'运动会', type:'activity'},
   '2026-10-30':{label:'校运会', short:'运动会', type:'activity'},
   '2026-11-11':{label:'校庆日', short:'校庆', type:'activity'},
   '2027-1-1'  :{label:'元旦节放假', short:'元旦', type:'festival'},
 };
+
+/* 期末考试安排（依据 MBA2 班群公告，均在 7311 教室；slot=所在时段）*/
+const EXAMS = [
+  {name:'组织行为学',   date:'2026-11-18', slot:'pm', time:'15:00–17:00', end:[17,0], room:'7311'},
+  {name:'商务英语',     date:'2026-11-19', slot:'am', time:'9:00–11:00',  end:[11,0], room:'7311'},
+  {name:'管理信息系统', date:'2026-11-20', slot:'am', time:'9:00–11:00',  end:[11,0], room:'7311'},
+];
 
 /* 13 门课程（2班·全日制·屏风校区）*/
 const COURSES = [
@@ -528,6 +555,9 @@ function sessionsInWeek(w){
 }
 function eventOf(d){ return EVENTS[dkey(d)] || null; }
 function parseKey(k){ const p=k.split('-').map(Number); return new Date(p[0],p[1]-1,p[2]); }
+const examsOf = d => EXAMS.filter(x=>x.date===dkey(d));
+const slotOrd = it => SLOTS[it.kind==='class' ? it.s.slot : it.exam.slot].ord;
+const bySlot  = (a,b) => slotOrd(a)-slotOrd(b) || (a.kind==='class' ? -1 : (b.kind==='class' ? 1 : 0));
 function effDow(d){        /* 某日实际执行课表的星期几：调休补课日按被补日 */
   const e = eventOf(d);
   if (e && e.type==='adjust' && e.repl){ const r=parseKey(e.repl); return r.getDay()===0?7:r.getDay(); }
@@ -550,7 +580,7 @@ function weekEvents(w){
   });
   return ev;
 }
-const evChipCls = e => e.type==='festival' ? 'ev-hol' : (e.type==='adjust' ? 'ev-adj' : 'ev-act');
+const evChipCls = e => e.type==='festival' ? 'ev-hol' : (e.type==='adjust' ? 'ev-adj' : (e.type==='exam' ? 'ev-exam' : 'ev-act'));
 const evShort  = e => e.short || e.label.replace('（可能上课）','').replace('放假','');   // 校历行短标签
 const wkLabel = s => s.ws===s.we ? '第'+s.ws+'周' : '第'+s.ws+'–'+s.we+'周';
 
@@ -601,12 +631,13 @@ function getNextClass(){
     const list = [];
     COURSES.forEach(c=>c.sessions.forEach(s=>{
       if (s.skip && s.skip.includes(wk)) return;
-      if (s.dow===dow && wk>=s.ws && wk<=s.we) list.push({c,s});
+      if (s.dow===dow && wk>=s.ws && wk<=s.we) list.push({kind:'class', c, s});
     }));
+    examsOf(d).forEach(x=>list.push({kind:'exam', exam:x}));
     if (!list.length) continue;
-    list.sort((a,b)=>SLOTS[a.s.slot].ord - SLOTS[b.s.slot].ord);
+    list.sort(bySlot);
     for (const it of list){
-      const [h,m] = SLOT_END[it.s.slot];
+      const [h,m] = it.kind==='class' ? SLOT_END[it.s.slot] : it.exam.end;
       const end = new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, m);
       if (end > NOW) return {...it, d, w, adj: !!(e && e.type==='adjust')};
     }
@@ -617,8 +648,9 @@ function todaySessions(){
   if (!CUR_WEEK) return [];
   const ev = eventOf(NOW);
   if (ev && ev.type==='festival') return [];     // 放假当日无课
-  return sessionsInWeek(effWeek(NOW)).filter(x=>x.s.dow===effDow(NOW))
-    .sort((a,b)=>SLOTS[a.s.slot].ord - SLOTS[b.s.slot].ord);
+  const cls = sessionsInWeek(effWeek(NOW)).filter(x=>x.s.dow===effDow(NOW))
+    .map(x=>({kind:'class', c:x.c, s:x.s}));
+  return cls.concat(examsOf(NOW).map(x=>({kind:'exam', exam:x}))).sort(bySlot);
 }
 
 function renderHero(){
@@ -633,23 +665,33 @@ function renderHero(){
   }
   const next = getNextClass();
   if (next){
-    stats.push({lbl:'下一节课', val:next.c.short+' · '+md(next.d),
-                sub:(next.adj ? '按'+DOW[next.s.dow]+'课表' : DOW[next.s.dow])+' · '+SLOTS[next.s.slot].label+' '+SLOTS[next.s.slot].time});
+    if (next.kind==='exam'){
+      stats.push({lbl:'下一场考试', val:next.exam.name+' · '+md(next.d),
+                  sub:DOW[next.d.getDay()===0?7:next.d.getDay()]+' '+next.exam.time+' · '+next.exam.room+'教室'});
+    } else {
+      stats.push({lbl:'下一节课', val:next.c.short+' · '+md(next.d),
+                  sub:(next.adj ? '按'+DOW[next.s.dow]+'课表' : DOW[next.s.dow])+' · '+SLOTS[next.s.slot].label+' '+SLOTS[next.s.slot].time});
+    }
   }
 
   const tlist = todaySessions();
   const evNow = eventOf(NOW);
   let dowTxt = '周'+['','一','二','三','四','五','六','日'][NOW.getDay()===0?7:NOW.getDay()];
-  if (evNow && evNow.type==='adjust') dowTxt += ' · '+evNow.short;
+  if (evNow && (evNow.type==='adjust' || evNow.type==='exam')) dowTxt += ' · '+evNow.short;
   let tInner;
   if (!tlist.length){
     tInner = '<div class="tnone">'+(evNow && evNow.type==='festival' ? '节假日放假，今日无课' : '今天没有课 🎉')+'</div>';
   } else {
-    tInner = '<div class="tlist">' + tlist.map(({c,s})=>
-      '<div class="trow"><span class="cdt '+c.cls+'"></span><span class="tn">'+c.short+'</span>'
-      +'<span class="tt">'+SLOTS[s.slot].label+' '+SLOTS[s.slot].time+'</span></div>').join('') + '</div>';
+    tInner = '<div class="tlist">' + tlist.map(it=>{
+      if (it.kind==='exam')
+        return '<div class="trow"><span class="cdt" style="background:var(--hol)"></span><span class="tn">'+it.exam.name+'（考试）</span>'
+          +'<span class="tt">'+it.exam.time+'</span></div>';
+      return '<div class="trow"><span class="cdt '+it.c.cls+'"></span><span class="tn">'+it.c.short+'</span>'
+        +'<span class="tt">'+SLOTS[it.s.slot].label+' '+SLOTS[it.s.slot].time+'</span></div>';
+    }).join('') + '</div>';
   }
-  stats.push({lbl:'📍 今日课程 · '+dowTxt, html:tInner});
+  const hasExamToday = tlist.some(i=>i.kind==='exam');
+  stats.push({lbl:'📍 今日'+(hasExamToday?'安排':'课程')+' · '+dowTxt, html:tInner});
 
   row.innerHTML = stats.map((s,i)=>{
     if (s.html!==undefined)
@@ -730,7 +772,8 @@ function renderGrid(){
       const off = !!(evd && evd.type==='festival');   // 放假当日不显示课程块
       const adj = !!(evd && evd.type==='adjust');     // 调休补课日：按被补日课表展示
       const list = off ? [] : sessionsFor(d).filter(x=>x.s.slot===k);
-      if (!list.length){
+      const exs = off ? [] : examsOf(d).filter(x=>x.slot===k);
+      if (!list.length && !exs.length){
         g += '<div class="gcell'+(off?' hol':(adj?' adj0':(dow>=6?' we':'')))+'"></div>';
       } else {
         g += '<div class="gcell'+(adj?' mk':'')+'">';
@@ -739,6 +782,14 @@ function renderGrid(){
             + '<span class="nm">'+c.short+'</span>'
             + '<span class="tc">'+c.teacher+'</span>'
             + '</button>';
+        });
+        exs.forEach((x,idx)=>{
+          g += '<div class="ecard" title="期末考试 · '+x.name+' '+x.time+' · '+x.room+'教室">'
+            + '<span class="bdg">考试</span>'
+            + '<span class="nm">'+x.name+'</span>'
+            + '<span class="et">'+x.time+'</span>'
+            + '<span class="er">📍'+x.room+'<span class="cw">教室</span></span>'
+            + '</div>';
         });
         g += '</div>';
       }
@@ -773,12 +824,16 @@ function renderTodayBar(){
   const ev = eventOf(NOW);
   const dow = NOW.getDay()===0?7:NOW.getDay();
   let inner = '📍 <b>今天是 '+md(NOW)+'（'+DOW[dow]+'）</b>';
-  if (ev) inner += '<span class="evchip '+evChipCls(ev)+'">'+ev.label+'</span>';
+  if (ev && ev.type!=='exam') inner += '<span class="evchip '+evChipCls(ev)+'">'+ev.label+'</span>';
   if (!list.length){
     inner += '<span style="color:var(--ink2)">今天没有课 🎉</span>';
   } else {
-    list.forEach(({c,s})=>{
-      inner += '<span class="tb-mini '+c.cls+'">'+c.short+' '+SLOTS[s.slot].time+'</span>';
+    list.forEach(it=>{
+      if (it.kind==='exam'){
+        inner += '<span class="tb-mini" style="background:#ffe4e6;color:var(--hol)">📝 '+it.exam.name+' 考试 '+it.exam.time+' · '+it.exam.room+'教室</span>';
+      } else {
+        inner += '<span class="tb-mini '+it.c.cls+'">'+it.c.short+' '+SLOTS[it.s.slot].time+'</span>';
+      }
     });
   }
   el.innerHTML = '<div class="todaybar">'+inner+'</div>';
@@ -888,6 +943,10 @@ function openModal(id, week){
   const sesTxt = c.sessions.map(s=>DOW[s.dow]+' · '+SLOTS[s.slot].label+'（'+SLOTS[s.slot].per+' '+SLOTS[s.slot].time+'）').join('<br>');
   const wks = c.sessions.map(s=>wkLabel(s)).join('、');
   const occ = week && c.sessions.some(s=>week>=s.ws&&week<=s.we);
+  const ex = EXAMS.find(x=>c.name.startsWith(x.name));
+  const exRow = ex ? '<div class="irow"><span class="ic">📝</span><span class="k">期末考试</span><span class="v">'
+    + md(parseKey(ex.date))+'（'+DOW[parseKey(ex.date).getDay()===0?7:parseKey(ex.date).getDay()]+'）'+ex.time
+    + ' · '+ex.room+'教室</span></div>' : '';
   const phone = c.phone
     ? '<a href="tel:'+c.phone+'">'+c.phone+'</a> <span style="font-size:11px;color:#94a3b8;font-weight:500">（点击拨打）</span>'
     : '<span class="na">暂未提供，可通过教务或班级群联系</span>';
@@ -903,6 +962,7 @@ function openModal(id, week){
     + '<div class="irow"><span class="ic">📞</span><span class="k">联系电话</span><span class="v">'+phone+'</span></div>'
     + '<div class="irow"><span class="ic">🗓️</span><span class="k">上课时间</span><span class="v">'+wks+'<br><span style="font-weight:500;color:var(--ink2)">'+sesTxt+'</span></span></div>'
     + '<div class="irow"><span class="ic">🏫</span><span class="k">上课地点</span><span class="v">屏风校区 '+ROOM+' 教室<span style="display:block;font-weight:500;color:#94a3b8;font-size:12px">全日制在校班（2班）</span></span></div>'
+    + exRow
     + '<div class="bk"><div class="bt">📚 参考教材与书目</div><ul>'
     + c.books.map(b=>'<li'+(b.includes('参考书目')?' class="ref"':'')+'>'+b+'</li>').join('')
     + (c.site ? '<li class="site">'+c.site+'</li>' : '')
